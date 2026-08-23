@@ -52,7 +52,7 @@ Avg quality score, % brand-safety-flagged, quality distribution, and a bottom-10
 
 Win rate, bid price vs. win price, CPM by audience segment.
 
-*Honest caveat: CPM is basically flat across segments because audience segment was never tied to price in the generator, it's random. With real correlation, this chart would be a genuine tool for spotting overpriced segments. The bid/win relationship is also unusually clean and linear, since win price here is just `bid_price × random(0.7–0.98)`, real auction data would show more noise.*
+*To note: CPM is basically flat across segments because audience segment was never tied to price in the generator, it's random. With real correlation, this chart would be a genuine tool for spotting overpriced segments. The bid/win relationship is also clean and linear, since win price here is just `bid_price × random(0.7–0.98)`, real auction data would show more noise.*
 
 ![Pricing & Bidding Efficiency](./superset%20screenshots/dashboard-3-pricing-efficiency.png)
 
