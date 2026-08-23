@@ -19,7 +19,7 @@ import os
 import random
 
 # ---------------------------------------------------------------------------
-# Config — tune these if you want more/fewer rows or a different date range
+# Config uration
 # ---------------------------------------------------------------------------
 N_ROWS = 500_000
 START_DATE = datetime(2026, 1, 1)
@@ -42,7 +42,7 @@ _TLDS = [".com", ".net", ".io", ".co", ".news", ".media"]
 
 
 def make_publisher_domains(n):
-    """Generate n plausible, unique-ish publisher domain names without external deps."""
+    """Generate n plausible, unique-esque publisher domain names without external deps."""
     domains = set()
     while len(domains) < n:
         word1 = random.choice(_DOMAIN_WORDS)
@@ -73,8 +73,8 @@ advertiser_ids = [f"ADV-{i:03d}" for i in range(1, N_ADVERTISERS + 1)]
 publisher_domains = make_publisher_domains(N_PUBLISHERS)
 
 # Give each campaign a fixed advertiser, DSP, and a baseline "quality tier"
-# so performance isn't pure noise — some campaigns should clearly be
-# better than others, which is what you want to be able to show in a dashboard.
+# So performance isn't pure noise — some campaigns should clearly be
+# better than others.
 campaign_meta = {}
 for cid in campaign_ids:
     campaign_meta[cid] = {
@@ -83,8 +83,7 @@ for cid in campaign_ids:
         "quality_tier": np.random.choice(["low", "mid", "high"], p=[0.2, 0.5, 0.3]),
     }
 
-# A handful of publishers are deliberately "bad" — low quality, low viewability
-# so your quality-scoring dashboard in Superset has something real to surface.
+# A handful of publishers are deliberately low quality, low viewability
 publisher_quality = {
     pub: np.random.choice(["low", "mid", "high"], p=[0.15, 0.55, 0.3])
     for pub in publisher_domains
