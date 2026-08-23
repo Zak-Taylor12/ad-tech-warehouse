@@ -43,7 +43,7 @@ KPIs, daily spend trend, spend by DSP, top-10 campaigns by conversions.
 ### 2. Quality & Brand Safety
 **Business question:** Which publishers should be reconsidered or cut?
 
-Avg quality score, % brand-safety-flagged, quality distribution, and a bottom-10-publishers table showing quality, viewability, and spend together, since a low-quality publisher receiving $50 isn't a problem, one receiving $8,000 is.
+Avg quality score, % brand-safety-flagged, quality distribution, and a bottom-10-publishers table showing quality, viewability, and spend together, identifying low quality publishers receiving exorbitent money.
 
 ![Quality & Brand Safety](./superset%20screenshots/dashboard-2-quality-brand-safety.png)
 
