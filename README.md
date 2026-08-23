@@ -58,11 +58,24 @@ Win rate, bid price vs. win price, CPM by audience segment.
 
 ---
 
+## AI-assisted reporting
+
+[`generate_ai_summary.py`](./generate_ai_summary.py) pulls the same metrics shown on the dashboards directly from Snowflake and uses Claude to generate a short executive summary, automating a task an analyst would otherwise write by hand each reporting cycle.
+
+Actual output from a real run against this dataset:
+
+> From January through June 2026, the campaign delivered 943 conversions at a cost per conversion of $6.24 against a total spend of $5,887.01, with a CTR of 1.61% and a healthy win rate of 59.56%. Two areas warrant attention: the average quality score of 0.59 sits in middling territory on a 0–1 scale, suggesting ad relevance or landing page alignment could be improved, and a brand safety flag rate of 7.20% is elevated enough to merit a review of placement lists and contextual targeting settings to protect brand reputation. Overall efficiency looks reasonable, but addressing quality score and brand safety should be the priority going into the next half.
+
+Currently run on demand; a natural next step would be scheduling it and writing results back into Snowflake so a dashboard tile could display the latest summary automatically.
+
+---
+
 ## Repo structure
 
 ```
 ad-tech-warehouse/
   generate_adtech_data.py
+  generate_ai_summary.py
   sql/
     raw/
     staging/
