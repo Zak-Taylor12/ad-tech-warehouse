@@ -1,7 +1,7 @@
 -- One row per campaign. Since every event for a given campaign
--- always shares the same advertiser and DSP, a simple DISTINCT
--- is enough to collapse the event-level data down to one row
--- per campaign.
+-- always shares the same advertiser and buying platform, a simple
+-- DISTINCT is enough to collapse the event-level data down to one
+-- row per campaign.
 -- ============================================================
 
 CREATE OR REPLACE TABLE CHALICE_PORTFOLIO.MARTS.DIM_CAMPAIGN AS
@@ -9,7 +9,8 @@ CREATE OR REPLACE TABLE CHALICE_PORTFOLIO.MARTS.DIM_CAMPAIGN AS
 SELECT DISTINCT
     campaign_id,
     advertiser_id,
-    dsp
+    buying_platform,
+    channel
 FROM CHALICE_PORTFOLIO.STAGING.STG_ADTECH_EVENTS
 WHERE campaign_id IS NOT NULL;
 

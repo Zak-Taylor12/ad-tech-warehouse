@@ -19,7 +19,7 @@ import os
 import random
 
 # ---------------------------------------------------------------------------
-# Config uration
+# Configuration
 # ---------------------------------------------------------------------------
 N_ROWS = 500_000
 START_DATE = datetime(2026, 1, 1)
@@ -58,7 +58,17 @@ N_CAMPAIGNS = 40
 N_ADVERTISERS = 15
 N_PUBLISHERS = 60
 
-DSPS = ["Trade Desk", "DV360", "Meta", "YouTube", "Amazon DSP"]
+# Buying platforms span two channels: programmatic DSPs and walled gardens.
+# Meta and YouTube are walled gardens, not DSPs, so the column is named
+# buying_platform and a channel column carries the programmatic vs walled-garden split.
+BUYING_PLATFORMS = ["Trade Desk", "DV360", "Meta", "YouTube", "Amazon DSP"]
+PLATFORM_CHANNEL = {
+    "Trade Desk": "programmatic",
+    "DV360":      "programmatic",
+    "Amazon DSP": "programmatic",
+    "Meta":       "walled_garden",
+    "YouTube":    "walled_garden",
+}
 AD_FORMATS = ["display", "video", "native", "audio", "ctv"]
 DEVICE_TYPES = ["mobile", "desktop", "tablet", "ctv"]
 GEOS = ["US-CA", "US-NY", "US-TX", "US-FL", "US-IL", "US-WA", "US-GA", "US-MA", "US-CO", "US-AZ"]
@@ -72,14 +82,14 @@ campaign_ids = [f"CMP-{i:04d}" for i in range(1, N_CAMPAIGNS + 1)]
 advertiser_ids = [f"ADV-{i:03d}" for i in range(1, N_ADVERTISERS + 1)]
 publisher_domains = make_publisher_domains(N_PUBLISHERS)
 
-# Give each campaign a fixed advertiser, DSP, and a baseline "quality tier"
+# Give each campaign a fixed advertiser, buying platform, and a baseline "quality tier"
 # So performance isn't pure noise — some campaigns should clearly be
 # better than others.
 campaign_meta = {}
 for cid in campaign_ids:
     campaign_meta[cid] = {
         "advertiser_id": random.choice(advertiser_ids),
-        "dsp": random.choice(DSPS),
+        "buying_platform": random.choice(BUYING_PLATFORMS),
         "quality_tier": np.random.choice(["low", "mid", "high"], p=[0.2, 0.5, 0.3]),
     }
 
@@ -145,7 +155,8 @@ def generate_row():
         "campaign_id": campaign_id,
         "advertiser_id": meta["advertiser_id"],
         "publisher_domain": publisher,
-        "dsp": meta["dsp"],
+        "buying_platform": meta["buying_platform"],
+        "channel": PLATFORM_CHANNEL[meta["buying_platform"]],
         "ad_format": random.choice(AD_FORMATS),
         "device_type": random.choice(DEVICE_TYPES),
         "geo": random.choice(GEOS),
@@ -179,8 +190,13 @@ def inject_dirty_data(df: pd.DataFrame) -> pd.DataFrame:
     null_idx = np.random.choice(df.index, size=int(len(df) * 0.005), replace=False)
     df.loc[null_idx, "publisher_domain"] = None
 
-    # 3. A few negative spend values (simulates a currency/refund bug upstream)
-    neg_idx = np.random.choice(df.index, size=int(len(df) * 0.001), replace=False)
+    # 3. A few negative spend values (simulates a currency/refund bug upstream).
+    #    Only target rows that actually have positive spend — ~40% of rows are
+    #    losing bids with spend = 0, and negating 0 stays 0, which would slip
+    #    past staging's `spend < 0` check. Restricting the pool makes every
+    #    injected row genuinely negative and therefore detectable.
+    positive_spend_idx = df.index[df["spend"] > 0]
+    neg_idx = np.random.choice(positive_spend_idx, size=int(len(df) * 0.001), replace=False)
     df.loc[neg_idx, "spend"] = -df.loc[neg_idx, "spend"].abs()
 
     # 4. A few impossible quality scores outside [0,1] (simulates a bad upstream join)

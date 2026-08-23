@@ -15,7 +15,8 @@ SELECT
     CAST(event_timestamp AS DATE)   AS event_date,
     campaign_id,
     publisher_domain,
-    dsp,
+    buying_platform,
+    channel,
     ad_format,
     device_type,
     geo,
@@ -34,8 +35,11 @@ FROM CHALICE_PORTFOLIO.STAGING.STG_ADTECH_EVENTS
 WHERE NOT had_invalid_spend
   AND NOT had_invalid_quality_score;
 
--- Query checking accuracy of measure created in Superset Dashboard
-  SELECT dsp, SUM(spend) AS Total_Sales
-  FROM CHALICE_PORTFOLIO.STAGING.STG_ADTECH_EVENTS
-  GROUP BY dsp
+-- Query checking the spend measure shown on the Superset dashboard.
+-- Aliased total_spend: this is ad spend, not revenue, so it must not be
+-- labeled as sales on the dashboard.
+SELECT buying_platform, SUM(spend) AS total_spend
+FROM CHALICE_PORTFOLIO.MARTS.FACT_AD_EVENTS
+GROUP BY buying_platform
+ORDER BY total_spend DESC;
   

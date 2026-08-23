@@ -1,7 +1,10 @@
--- This is the staging model. It takes the raw data
--- and turns it into something trustworthy: correct types,
--- no duplicates, and clear visibility into any bad values
--- instead of deleting them.
+-- This is the staging model. It takes the raw data and turns it into
+-- something trustworthy: correct types, exact-duplicate rows removed,
+-- and every data-quality problem recorded in a boolean flag column so
+-- nothing is handled silently. Unusable values are then made safe:
+-- invalid spend and quality scores are nulled (flag retained), and
+-- rows with no publisher_domain are dropped (they can't be attributed).
+-- The flags make every one of those actions auditable downstream.
 -- ============================================================
 
 CREATE OR REPLACE TABLE CHALICE_PORTFOLIO.STAGING.STG_ADTECH_EVENTS AS
@@ -16,7 +19,8 @@ WITH ADTECH_RAW_Source AS (
         CAST(campaign_id AS VARCHAR(20))         AS campaign_id,
         CAST(advertiser_id AS VARCHAR(20))       AS advertiser_id,
         CAST(publisher_domain AS VARCHAR(100))   AS publisher_domain,
-        CAST(dsp AS VARCHAR(50))                 AS dsp,
+        CAST(buying_platform AS VARCHAR(50))     AS buying_platform,
+        CAST(channel AS VARCHAR(20))             AS channel,
         CAST(ad_format AS VARCHAR(20))           AS ad_format,
         CAST(device_type AS VARCHAR(20))         AS device_type,
         CAST(geo AS VARCHAR(10))                 AS geo,
@@ -32,16 +36,17 @@ WITH ADTECH_RAW_Source AS (
         CAST(viewability_rate AS NUMBER(6,4))    AS viewability_rate,
         CAST(brand_safety_flag AS BOOLEAN)       AS brand_safety_flag,
 
-        -- There's no true unique id in the raw data (like a bid_id),
-        -- so we build a fingerprint from the fields that together
-        -- describe one real event. Two rows with a matching fingerprint
-        -- are treated as the same event.
+        -- There's no true unique id in the raw data (like a bid_id).
+        -- The upstream duplicates are exact full-row copies, so the
+        -- fingerprint hashes EVERY column. A partial fingerprint (a few
+        -- fields) would also collapse two genuinely distinct events that
+        -- happen to share those fields, silently deleting real rows.
         HASH(
-            event_timestamp,
-            campaign_id,
-            publisher_domain,
-            bid_price,
-            impressions
+            event_timestamp, campaign_id, advertiser_id, publisher_domain,
+            buying_platform, channel, ad_format, device_type, geo,
+            audience_segment, bid_price, win_price, impressions, clicks,
+            conversions, spend, predicted_ctr, quality_score,
+            viewability_rate, brand_safety_flag
         ) AS row_hash
     FROM CHALICE_PORTFOLIO.RAW.ADTECH_EVENTS
 ),
@@ -51,6 +56,8 @@ WITH ADTECH_RAW_Source AS (
 DEDUPED_Events AS (
     SELECT *
     FROM ADTECH_RAW_Source
+    -- Rows sharing a full-row hash are identical, so which one is kept
+    -- doesn't matter; ORDER BY is only here to make the choice deterministic.
     QUALIFY ROW_NUMBER() OVER (
         PARTITION BY row_hash
         ORDER BY event_timestamp
@@ -88,7 +95,8 @@ SELECT
     campaign_id,
     advertiser_id,
     publisher_domain,
-    dsp,
+    buying_platform,
+    channel,
     ad_format,
     device_type,
     geo,
