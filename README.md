@@ -1,14 +1,14 @@
 # AdTech Campaign Performance Warehouse
 
-An end-to-end analytics pipeline for programmatic advertising data: synthetic ad campaign data modeled in Snowflake (raw → staging → marts) and visualized in Apache Superset.
+An end-to-end analytics pipeline for advertising data: synthetic ad campaign data modeled in Snowflake (raw → staging → marts) and visualized in Apache Superset.
 
-**Stack:** Snowflake (warehouse/modeling) → Apache Superset (BI/dashboards)
+Stack: Snowflake (warehouse/modeling) → Apache Superset (BI/dashboards)
 
 ---
 
-## The data
+## Synthetic Data
 
-Since I didn't have access to real campaign data, [`generate_adtech_data.py`](./generate_adtech_data.py) produces ~500,000 synthetic programmatic ad events across 40 campaigns, 60 publishers, and 5 DSPs. Campaigns and publishers are each assigned a quality tier, so quality score, viewability, and win rate correlate meaningfully rather than being pure noise. The generator also injects real data quality problems on purpose, duplicates, missing values, negative spend, out-of-range scores, so the staging layer has genuine work to do.
+Since I didn't have access to real campaign data, [`generate_adtech_data.py`](./generate_adtech_data.py) produces ~500,000 synthetic programmatic ad events across 40 campaigns, 60 publishers, and 5 DSPs. Campaigns and publishers are each assigned a quality tier, so quality score, viewability, and win rate correlate meaningfully rather than being pure noise. The generator also injects real data quality problems on purpose, duplicates, missing values, negative spend, out-of-range scores, with transofrmations being shown to show real data transformations and how they should be handled. 
 
 ---
 
@@ -21,7 +21,7 @@ sql/
   marts/     Star schema: fact table + dimension tables
 ```
 
-**Staging** ([`stg_adtech_events.sql`](./sql/staging/stg_adtech_events.sql)) does the real work: explicit type casting, hash-based deduplication (no natural event ID exists in the raw data), and bad values are **flagged rather than silently deleted or nulled**, three boolean columns make data quality issues visible to anyone querying the table.
+**Staging** ([`stg_adtech_events.sql`](./sql/staging/stg_adtech_events.sql)) Transformation and enrichment occur here : explicit type casting, hash-based deduplication (no natural event ID exists in the raw data), and bad values are **flagged rather than silently deleted or nulled**, three boolean columns make data quality issues visible to anyone querying the table.
 
 **Marts** is a proper star schema ([`dim_campaign`](./sql/marts/dim_campaign.sql), [`dim_publisher`](./sql/marts/dim_publisher.sql), [`dim_date`](./sql/marts/dim_date.sql), [`fact_ad_events`](./sql/marts/fact_ad_events.sql)). The dashboards below query `fact_ad_events` directly and don't strictly need the dimension joins, I built them anyway since that's the correct pattern for maintainability and future metadata, not because today's queries required it.
 
