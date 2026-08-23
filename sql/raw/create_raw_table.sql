@@ -1,0 +1,21 @@
+CREATE OR REPLACE TABLE CHALICE_PORTFOLIO.RAW.ADTECH_EVENTS (
+    event_timestamp     TIMESTAMP_NTZ,
+    campaign_id         VARCHAR(20),
+    advertiser_id       VARCHAR(20),
+    publisher_domain    VARCHAR(100),
+    dsp                 VARCHAR(50),
+    ad_format           VARCHAR(20),
+    device_type         VARCHAR(20),
+    geo                 VARCHAR(10),
+    audience_segment    VARCHAR(50),
+    bid_price           NUMBER(10,2),
+    win_price           NUMBER(10,2),
+    impressions          NUMBER(10,0),
+    clicks               NUMBER(10,0),
+    conversions          NUMBER(10,0),
+    spend                NUMBER(12,4),
+    predicted_ctr        NUMBER(8,5),
+    quality_score        NUMBER(6,4),
+    viewability_rate     NUMBER(6,4),
+    brand_safety_flag    BOOLEAN
+);

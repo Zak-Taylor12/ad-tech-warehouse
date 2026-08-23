@@ -1,0 +1,20 @@
+# Data files — don't commit large generated datasets
+*.csv
+*.parquet
+data/
+
+# Credentials — never commit these
+.env
+*.pem
+snowflake_config.json
+databricks_config.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
